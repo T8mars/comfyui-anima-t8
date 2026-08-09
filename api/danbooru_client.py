@@ -28,6 +28,11 @@ import urllib.request
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Dict, List, Optional, Tuple
 
+try:
+    from ..http_retry import urlopen_with_route_retry
+except Exception:
+    from http_retry import urlopen_with_route_retry
+
 BASE_URL = "https://danbooru.donmai.us"
 USER_AGENT = "comfyui-anima-t8/1.0 (https://github.com/mikuYongh/AnimaForge)"
 
@@ -49,7 +54,7 @@ def _fetch_one_page(category: int, page: int, *, page_size: int, min_count: int,
     )
     req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
     try:
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
+        with urlopen_with_route_retry(req, timeout=timeout) as resp:
             payload = resp.read().decode("utf-8")
     except urllib.error.HTTPError as e:
         if e.code in (404, 410):

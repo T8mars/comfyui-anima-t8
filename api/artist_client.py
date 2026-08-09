@@ -8,6 +8,11 @@ import urllib.request
 import urllib.error
 from typing import List, Dict, Any
 
+try:
+    from ..http_retry import urlopen_with_route_retry
+except Exception:
+    from http_retry import urlopen_with_route_retry
+
 
 class ArtistClient:
     BASE_URL = "https://cdn.mooshieblob.com/20260325_anima_all_artists"
@@ -20,7 +25,7 @@ class ArtistClient:
                 self.SEARCH_URL,
                 headers={"User-Agent": "comfyui-anima-t8/1.0"},
             )
-            with urllib.request.urlopen(req, timeout=self.TIMEOUT) as resp:
+            with urlopen_with_route_retry(req, timeout=self.TIMEOUT) as resp:
                 if resp.status != 200:
                     print("[anima_t8] 远程返回非 200:", resp.status)
                     return []

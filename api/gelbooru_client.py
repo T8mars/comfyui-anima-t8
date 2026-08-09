@@ -26,6 +26,11 @@ import urllib.request
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Any, Dict, List, Optional, Tuple
 
+try:
+    from ..http_retry import urlopen_with_route_retry
+except Exception:
+    from http_retry import urlopen_with_route_retry
+
 BASE_URL = "https://gelbooru.com"
 USER_AGENT = "comfyui-anima-t8/1.4 (https://github.com/T8mars/comfyui-anima-t8)"
 
@@ -126,7 +131,7 @@ def _http_get_json(url: str, *, timeout: float = 30.0) -> Optional[Any]:
         "Accept": "application/json",
     })
     try:
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
+        with urlopen_with_route_retry(req, timeout=timeout) as resp:
             payload = resp.read().decode("utf-8", errors="replace")
     except urllib.error.HTTPError as e:
         if e.code == 401:
@@ -151,7 +156,7 @@ def _http_get_text(url: str, *, timeout: float = 30.0) -> str:
         "Accept": "text/html,application/xhtml+xml",
     })
     try:
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
+        with urlopen_with_route_retry(req, timeout=timeout) as resp:
             return resp.read().decode("utf-8", errors="replace")
     except Exception as e:
         print(f"[anima_t8] gelbooru html fetch failed: {e}")

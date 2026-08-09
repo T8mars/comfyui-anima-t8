@@ -26,6 +26,11 @@ import urllib.parse
 import urllib.request
 from typing import Any, Dict, List, Optional
 
+try:
+    from ..http_retry import urlopen_with_route_retry
+except Exception:
+    from http_retry import urlopen_with_route_retry
+
 BASE_URL = "https://civitai.com/api/v1"
 USER_AGENT = "comfyui-anima-t8/1.1 (https://github.com/T8mars/comfyui-anima-t8)"
 
@@ -42,7 +47,7 @@ def _http_get_json(url: str, *, timeout: float = 30.0,
         headers["Authorization"] = f"Bearer {token}"
     req = urllib.request.Request(url, headers=headers)
     try:
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
+        with urlopen_with_route_retry(req, timeout=timeout) as resp:
             payload = resp.read().decode("utf-8", errors="replace")
     except urllib.error.HTTPError as e:
         print(f"[anima_t8] civitai HTTP {e.code} for {url}")

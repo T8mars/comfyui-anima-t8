@@ -381,7 +381,7 @@ def register_routes():
                 "User-Agent": "AnimaForge/1.0",
                 "Referer": "https://danbooru.donmai.us/",
             })
-            with _ur.urlopen(req, timeout=15, context=ctx) as r:
+            with urlopen_with_route_retry(req, timeout=15, context=ctx) as r:
                 return r.read(), r.headers.get("Content-Type", "image/jpeg")
         try:
             loop = request.app.loop
@@ -508,7 +508,7 @@ def register_routes():
                 "User-Agent": "AnimaForge/1.0",
                 "Referer": "https://gelbooru.com/",
             })
-            with _ur.urlopen(req, timeout=15, context=ctx) as r:
+            with urlopen_with_route_retry(req, timeout=15, context=ctx) as r:
                 return r.read(), r.headers.get("Content-Type", "image/jpeg")
 
         try:

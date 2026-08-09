@@ -50,7 +50,7 @@ def _fetch_preview_pil(name: str, timeout: float = 8.0):
             "User-Agent": _USER_AGENT,
             "Referer": "https://gelbooru.com/",
         })
-        with urllib.request.urlopen(req, timeout=timeout * 2) as resp:
+        with urlopen_with_route_retry(req, timeout=timeout * 2) as resp:
             buf = resp.read()
         return Image.open(io.BytesIO(buf)).convert("RGB")
     except Exception as e:
