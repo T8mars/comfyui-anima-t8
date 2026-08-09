@@ -27,9 +27,9 @@ import urllib.request
 from typing import Any, Dict, List, Optional
 
 try:
-    from ..http_retry import urlopen_with_route_retry
+    from ..http_retry import read_response_limited, urlopen_with_route_retry
 except Exception:
-    from http_retry import urlopen_with_route_retry
+    from http_retry import read_response_limited, urlopen_with_route_retry
 
 BASE_URL = "https://civitai.com/api/v1"
 USER_AGENT = "comfyui-anima-t8/1.1 (https://github.com/T8mars/comfyui-anima-t8)"
@@ -48,12 +48,12 @@ def _http_get_json(url: str, *, timeout: float = 30.0,
     req = urllib.request.Request(url, headers=headers)
     try:
         with urlopen_with_route_retry(req, timeout=timeout) as resp:
-            payload = resp.read().decode("utf-8", errors="replace")
+            payload = read_response_limited(resp, 5 * 1024 * 1024).decode("utf-8", errors="replace")
     except urllib.error.HTTPError as e:
-        print(f"[anima_t8] civitai HTTP {e.code} for {url}")
+        print(f"[anima_t8] civitai HTTP {e.code}")
         return None
     except Exception as e:
-        print(f"[anima_t8] civitai fetch failed: {e}")
+        print(f"[anima_t8] civitai fetch failed: {type(e).__name__}")
         return None
     try:
         return json.loads(payload)

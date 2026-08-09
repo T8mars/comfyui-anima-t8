@@ -22,11 +22,11 @@ from typing import Any, Dict, List, Optional
 try:
     from .db import get_db
     from ..api.danbooru_client import BASE_URL as DANBOORU_BASE, fetch_tags, CATEGORY_NAMES, CATEGORY_BY_NAME
-    from ..http_retry import urlopen_with_route_retry
+    from ..http_retry import read_response_limited, urlopen_with_route_retry
 except Exception:
     from core.db import get_db
     from api.danbooru_client import BASE_URL as DANBOORU_BASE, fetch_tags, CATEGORY_NAMES, CATEGORY_BY_NAME
-    from http_retry import urlopen_with_route_retry
+    from http_retry import read_response_limited, urlopen_with_route_retry
 
 _SCHEMA = """
 CREATE TABLE IF NOT EXISTS danbooru_tags (
@@ -186,7 +186,7 @@ class DanbooruManager:
             ctx = ssl.create_default_context()
             t0 = time.time()
             with urlopen_with_route_retry(req, timeout=4, context=ctx) as resp:
-                raw = resp.read().decode("utf-8", errors="ignore")
+                raw = read_response_limited(resp, 5 * 1024 * 1024).decode("utf-8", errors="ignore")
             data = json.loads(raw) if raw else []
             if isinstance(data, list) and data:
                 p = data[0]

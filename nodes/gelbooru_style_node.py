@@ -7,8 +7,10 @@ from typing import List, Optional
 
 try:
     from api.gelbooru_client import fetch_preview_post
+    from http_retry import read_response_limited, urlopen_with_route_retry
 except Exception:
     from ..api.gelbooru_client import fetch_preview_post
+    from ..http_retry import read_response_limited, urlopen_with_route_retry
 
 _USER_AGENT = "comfyui-anima-t8/1.4"
 _PREVIEW_W, _PREVIEW_H = 512, 768
@@ -51,10 +53,10 @@ def _fetch_preview_pil(name: str, timeout: float = 8.0):
             "Referer": "https://gelbooru.com/",
         })
         with urlopen_with_route_retry(req, timeout=timeout * 2) as resp:
-            buf = resp.read()
+            buf = read_response_limited(resp)
         return Image.open(io.BytesIO(buf)).convert("RGB")
     except Exception as e:
-        print(f"[anima_t8] gelbooru preview fetch fail name={name}: {e}")
+        print(f"[anima_t8] gelbooru preview fetch failed: {type(e).__name__}")
         return None
 
 

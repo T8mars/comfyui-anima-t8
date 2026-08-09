@@ -27,9 +27,9 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Any, Dict, List, Optional, Tuple
 
 try:
-    from ..http_retry import urlopen_with_route_retry
+    from ..http_retry import read_response_limited, urlopen_with_route_retry
 except Exception:
-    from http_retry import urlopen_with_route_retry
+    from http_retry import read_response_limited, urlopen_with_route_retry
 
 BASE_URL = "https://gelbooru.com"
 USER_AGENT = "comfyui-anima-t8/1.4 (https://github.com/T8mars/comfyui-anima-t8)"
@@ -132,17 +132,17 @@ def _http_get_json(url: str, *, timeout: float = 30.0) -> Optional[Any]:
     })
     try:
         with urlopen_with_route_retry(req, timeout=timeout) as resp:
-            payload = resp.read().decode("utf-8", errors="replace")
+            payload = read_response_limited(resp, 5 * 1024 * 1024).decode("utf-8", errors="replace")
     except urllib.error.HTTPError as e:
         if e.code == 401:
             raise GelbooruAuthError(
                 "Gelbooru API 返回 401，需要配置 user_id/api_key "
                 "（环境变量 GELBOORU_USER_ID/GELBOORU_API_KEY 或 data/gelbooru_auth.json）"
             )
-        print(f"[anima_t8] gelbooru HTTP {e.code} for {url}")
+        print(f"[anima_t8] gelbooru HTTP {e.code}")
         return None
     except Exception as e:
-        print(f"[anima_t8] gelbooru fetch failed: {e}")
+        print(f"[anima_t8] gelbooru fetch failed: {type(e).__name__}")
         return None
     try:
         return json.loads(payload)
@@ -157,9 +157,9 @@ def _http_get_text(url: str, *, timeout: float = 30.0) -> str:
     })
     try:
         with urlopen_with_route_retry(req, timeout=timeout) as resp:
-            return resp.read().decode("utf-8", errors="replace")
+            return read_response_limited(resp, 5 * 1024 * 1024).decode("utf-8", errors="replace")
     except Exception as e:
-        print(f"[anima_t8] gelbooru html fetch failed: {e}")
+        print(f"[anima_t8] gelbooru html fetch failed: {type(e).__name__}")
         return ""
 
 

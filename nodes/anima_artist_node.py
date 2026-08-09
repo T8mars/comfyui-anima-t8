@@ -13,9 +13,9 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import List, Optional
 
 try:
-    from ..http_retry import urlopen_with_route_retry
+    from ..http_retry import read_response_limited, urlopen_with_route_retry
 except Exception:
-    from http_retry import urlopen_with_route_retry
+    from http_retry import read_response_limited, urlopen_with_route_retry
 
 DANBOORU_BASE = "https://danbooru.donmai.us"
 _USER_AGENT = "comfyui-anima-t8/1.0"
@@ -34,7 +34,7 @@ def _fetch_preview_pil(name: str, timeout: float = 8.0):
     try:
         req = urllib.request.Request(api, headers={"User-Agent": _USER_AGENT})
         with urlopen_with_route_retry(req, timeout=timeout) as resp:
-            data = json.loads(resp.read().decode("utf-8", errors="ignore"))
+            data = json.loads(read_response_limited(resp, 5 * 1024 * 1024).decode("utf-8", errors="ignore"))
         if not isinstance(data, list) or not data:
             return None
         p = data[0]
@@ -47,10 +47,10 @@ def _fetch_preview_pil(name: str, timeout: float = 8.0):
             "Referer": "https://danbooru.donmai.us/",
         })
         with urlopen_with_route_retry(req2, timeout=timeout * 2) as resp:
-            buf = resp.read()
+            buf = read_response_limited(resp)
         return Image.open(io.BytesIO(buf)).convert("RGB")
     except Exception as e:
-        print(f"[anima_t8] preview fetch fail name={name}: {e}")
+        print(f"[anima_t8] preview fetch failed: {type(e).__name__}")
         return None
 
 

@@ -36,9 +36,12 @@ def test_transport_failures_use_all_routes(monkeypatch):
     openers = iter(Opener(i) for i in range(4))
     monkeypatch.setattr(urllib.request, "ProxyHandler", fake_proxy_handler)
     monkeypatch.setattr(urllib.request, "build_opener", lambda *handlers: next(openers))
+    sleep = mock.Mock()
+    monkeypatch.setattr("http_retry.time.sleep", sleep)
 
     assert urlopen_with_route_retry("https://example.com", timeout=3) is response
     assert used_proxy_maps == [{}, None, {}, None]
+    assert [call.args[0] for call in sleep.call_args_list] == [1, 5, 10]
 
 
 def test_retryable_http_status_falls_back(monkeypatch):
@@ -47,9 +50,24 @@ def test_retryable_http_status_falls_back(monkeypatch):
     opener = mock.Mock()
     opener.open.side_effect = [error, response]
     monkeypatch.setattr("http_retry._build_opener", lambda *_: opener)
+    sleep = mock.Mock()
+    monkeypatch.setattr("http_retry.time.sleep", sleep)
 
     assert urlopen_with_route_retry("https://example.com", timeout=3) is response
     assert opener.open.call_count == 2
+    sleep.assert_called_once_with(1)
+
+
+def test_http_500_is_not_retried(monkeypatch):
+    error = urllib.error.HTTPError("https://example.com", 500, "failed", {}, None)
+    opener = mock.Mock()
+    opener.open.side_effect = error
+    monkeypatch.setattr("http_retry._build_opener", lambda *_: opener)
+
+    with pytest.raises(urllib.error.HTTPError):
+        urlopen_with_route_retry("https://example.com", timeout=3)
+
+    assert opener.open.call_count == 1
 
 
 def test_business_4xx_is_not_retried(monkeypatch):
