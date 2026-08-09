@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import http.client
 import ssl
 import time
 import urllib.error
@@ -40,7 +41,13 @@ def _build_opener(use_proxy: bool, context: Optional[ssl.SSLContext]):
     return urllib.request.build_opener(*handlers)
 
 
-def urlopen_with_route_retry(request, *, timeout: float, context: Optional[ssl.SSLContext] = None):
+def urlopen_with_route_retry(
+    request,
+    *,
+    timeout: float,
+    context: Optional[ssl.SSLContext] = None,
+    consume=None,
+):
     """Open an external GET using direct → proxy → direct → proxy.
 
     Only transport errors and retryable HTTP statuses are retried. Other 4xx
@@ -49,12 +56,27 @@ def urlopen_with_route_retry(request, *, timeout: float, context: Optional[ssl.S
     last_error = None
     for index, (route_name, use_proxy) in enumerate(ROUTE_ATTEMPTS, start=1):
         try:
-            return _build_opener(use_proxy, context).open(request, timeout=timeout)
+            response = _build_opener(use_proxy, context).open(
+                request, timeout=timeout
+            )
+            if consume is None:
+                return response
+            try:
+                return consume(response)
+            finally:
+                response.close()
         except urllib.error.HTTPError as exc:
             last_error = exc
             if exc.code not in RETRYABLE_HTTP_STATUSES or index == len(ROUTE_ATTEMPTS):
                 raise
-        except (urllib.error.URLError, TimeoutError, ConnectionError, OSError) as exc:
+        except (
+            urllib.error.URLError,
+            TimeoutError,
+            ConnectionError,
+            OSError,
+            http.client.IncompleteRead,
+            http.client.RemoteDisconnected,
+        ) as exc:
             last_error = exc
             if index == len(ROUTE_ATTEMPTS):
                 raise

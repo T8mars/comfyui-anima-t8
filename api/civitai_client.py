@@ -47,8 +47,13 @@ def _http_get_json(url: str, *, timeout: float = 30.0,
         headers["Authorization"] = f"Bearer {token}"
     req = urllib.request.Request(url, headers=headers)
     try:
-        with urlopen_with_route_retry(req, timeout=timeout) as resp:
-            payload = read_response_limited(resp, 5 * 1024 * 1024).decode("utf-8", errors="replace")
+        payload = urlopen_with_route_retry(
+            req,
+            timeout=timeout,
+            consume=lambda resp: read_response_limited(
+                resp, 5 * 1024 * 1024
+            ).decode("utf-8", errors="replace"),
+        )
     except urllib.error.HTTPError as e:
         print(f"[anima_t8] civitai HTTP {e.code}")
         return None

@@ -1,5 +1,6 @@
 import urllib.error
 import urllib.request
+import ssl
 from unittest import mock
 
 import pytest
@@ -81,3 +82,29 @@ def test_business_4xx_is_not_retried(monkeypatch):
 
     assert raised.value.code == 400
     assert opener.open.call_count == 1
+
+
+def test_tls_eof_while_consuming_body_uses_next_route(monkeypatch):
+    first = mock.Mock()
+    first.read.side_effect = ssl.SSLEOFError(
+        8, "EOF occurred in violation of protocol"
+    )
+    second = mock.Mock()
+    second.read.return_value = b"complete"
+    opener = mock.Mock()
+    opener.open.side_effect = [first, second]
+    monkeypatch.setattr("http_retry._build_opener", lambda *_: opener)
+    sleep = mock.Mock()
+    monkeypatch.setattr("http_retry.time.sleep", sleep)
+
+    result = urlopen_with_route_retry(
+        "https://example.com",
+        timeout=3,
+        consume=lambda response: response.read(),
+    )
+
+    assert result == b"complete"
+    assert opener.open.call_count == 2
+    sleep.assert_called_once_with(1)
+    first.close.assert_called_once()
+    second.close.assert_called_once()

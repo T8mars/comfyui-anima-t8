@@ -383,8 +383,15 @@ def register_routes():
                 "User-Agent": "AnimaForge/1.0",
                 "Referer": "https://danbooru.donmai.us/",
             })
-            with urlopen_with_route_retry(req, timeout=15, context=ctx) as r:
-                return read_response_limited(r), r.headers.get("Content-Type", "image/jpeg")
+            return urlopen_with_route_retry(
+                req,
+                timeout=15,
+                context=ctx,
+                consume=lambda r: (
+                    read_response_limited(r),
+                    r.headers.get("Content-Type", "image/jpeg"),
+                ),
+            )
         try:
             loop = request.app.loop
             body, ctype = await loop.run_in_executor(None, _fetch)
@@ -510,8 +517,15 @@ def register_routes():
                 "User-Agent": "AnimaForge/1.0",
                 "Referer": "https://gelbooru.com/",
             })
-            with urlopen_with_route_retry(req, timeout=15, context=ctx) as r:
-                return read_response_limited(r), r.headers.get("Content-Type", "image/jpeg")
+            return urlopen_with_route_retry(
+                req,
+                timeout=15,
+                context=ctx,
+                consume=lambda r: (
+                    read_response_limited(r),
+                    r.headers.get("Content-Type", "image/jpeg"),
+                ),
+            )
 
         try:
             loop = request.app.loop

@@ -52,8 +52,9 @@ def _fetch_preview_pil(name: str, timeout: float = 8.0):
             "User-Agent": _USER_AGENT,
             "Referer": "https://gelbooru.com/",
         })
-        with urlopen_with_route_retry(req, timeout=timeout * 2) as resp:
-            buf = read_response_limited(resp)
+        buf = urlopen_with_route_retry(
+            req, timeout=timeout * 2, consume=read_response_limited
+        )
         return Image.open(io.BytesIO(buf)).convert("RGB")
     except Exception as e:
         print(f"[anima_t8] gelbooru preview fetch failed: {type(e).__name__}")

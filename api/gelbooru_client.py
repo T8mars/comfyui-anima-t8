@@ -131,8 +131,13 @@ def _http_get_json(url: str, *, timeout: float = 30.0) -> Optional[Any]:
         "Accept": "application/json",
     })
     try:
-        with urlopen_with_route_retry(req, timeout=timeout) as resp:
-            payload = read_response_limited(resp, 5 * 1024 * 1024).decode("utf-8", errors="replace")
+        payload = urlopen_with_route_retry(
+            req,
+            timeout=timeout,
+            consume=lambda resp: read_response_limited(
+                resp, 5 * 1024 * 1024
+            ).decode("utf-8", errors="replace"),
+        )
     except urllib.error.HTTPError as e:
         if e.code == 401:
             raise GelbooruAuthError(
@@ -156,8 +161,13 @@ def _http_get_text(url: str, *, timeout: float = 30.0) -> str:
         "Accept": "text/html,application/xhtml+xml",
     })
     try:
-        with urlopen_with_route_retry(req, timeout=timeout) as resp:
-            return read_response_limited(resp, 5 * 1024 * 1024).decode("utf-8", errors="replace")
+        return urlopen_with_route_retry(
+            req,
+            timeout=timeout,
+            consume=lambda resp: read_response_limited(
+                resp, 5 * 1024 * 1024
+            ).decode("utf-8", errors="replace"),
+        )
     except Exception as e:
         print(f"[anima_t8] gelbooru html fetch failed: {type(e).__name__}")
         return ""
