@@ -13,9 +13,9 @@ My favorite girl Go YounJung
 
 > Anima 动漫提示词生成器 · ComfyUI 自定义节点
 >
-> 风格库三段式（52 条预设 / 15 分类）+ 1000+ 画师库 + Danbooru 四类（画师 / 作品 IP / 角色 IP / 风格·meta）+ Civitai 一键抓取 + 实时风格预览图
+> 风格库三段式（52 条预设 / 15 分类）+ 1000+ 画师库 + Danbooru/Gelbooru 标签库 + Civitai 一键抓取 + 实时风格预览图
 
-[![version](https://img.shields.io/badge/version-1.4.3-blue.svg)]()
+[![version](https://img.shields.io/badge/version-1.5.0-blue.svg)]()
 [![ComfyUI](https://img.shields.io/badge/ComfyUI-custom_node-green.svg)](https://github.com/comfyanonymous/ComfyUI)
 [![license](https://img.shields.io/badge/license-MIT-lightgrey.svg)]()
 
@@ -30,6 +30,7 @@ My favorite girl Go YounJung
 - 📚 **风格库 52 条 Pony 兼容预设 × 15 分类**：画质 / 媒介 / 镜头 / 构图 / 光影 / 服装 / 表情 / 季节 / 时代 / 场景 / 风格 / 情绪 / 角色 / NSFW / 测试，开箱即用
 - 🌐 **一键 Civitai 抓取**：输入模型 ID 自动拉高赞图 prompt，按 14 组关键词自动归类（兼容 Civitai 直 prompt / 嵌套 / ComfyUI workflow 三种 meta 结构）
 - 🎨 **5 个素材库 Tab 一键切换**：mooshieblob 画师 + Danbooru 画师 / 作品 IP / 角色 IP / 风格·meta
+- 🌐 **Gelbooru 标签库**：独立画师 / 作品 IP / 角色 IP / 通用标签面板，支持搜索、收藏、权重和预览图
 - 🖼️ **实时风格预览图**：选画师后运行节点即可在 PreviewImage 看到代表作首图
 - 🚀 **本地缓存 + 并发拉取**：首次切 Tab 仅 2~5 秒可用，后台异步补全 30000+ 标签
 - 🧬 **增量种子机制**：升级版本会按 name / title 增量补入新预设，**不覆盖**用户已编辑的内容
@@ -44,6 +45,7 @@ My favorite girl Go YounJung
 |---|---|---|---|
 | **Anima Prompt T8** | 三段式提示词组装（正向 / 负向 / 风格） | positive / negative / style | POSITIVE / NEGATIVE |
 | **Anima Artist Style T8** | 画师风格输出 + 实时预览 | artist_tags（多选）/ default_weight / use_artist_prefix | STYLE_PROMPT / **PREVIEW_IMAGES** |
+| **Anima Gelbooru Style T8** | Gelbooru 标签输出 + 实时预览 | gelbooru_tags（多选）/ default_weight / use_artist_prefix | STYLE_PROMPT / **PREVIEW_IMAGES** |
 | **Anima Prompt Combiner T8** | 把多段提示词合并为单段 | text_a / text_b / separator | COMBINED |
 | **Anima Saved Prompt Loader T8** | 从风格库一键加载已保存提示词 | preset_id | POSITIVE / NEGATIVE / STYLE |
 
@@ -62,7 +64,7 @@ pip install -r requirements.txt
 
 ### 方式 2：通过 ComfyUI Manager
 
-在 ComfyUI Manager 搜索 `comfyui-anima-t8` 后一键安装（待发布到 manager 列表）。
+在 ComfyUI Manager 搜索 `comfyui-anima-t8` 后一键安装。
 
 ### 依赖
 
@@ -90,6 +92,11 @@ pip install -r requirements.txt
   - 🧑‍🎤 **角色 IP** —— 30000+ 角色名
   - 🎭 **风格·meta** —— Danbooru meta tag（画风 / 媒介 / 题材描述）
   - 🎨 **画师库·mooshieblob** —— 1000+ 精选画师 + 高质量预览图
+- **🌐 Gelbooru 标签库**：4 个 Tab 切换
+  - 👤 **Gelbooru 画师**
+  - 📚 **Gelbooru 作品 IP**
+  - 🧑‍🎤 **Gelbooru 角色 IP**
+  - 🏷 **Gelbooru 通用标签**
 
 ### 3. 选择 → 添加
 
@@ -120,6 +127,7 @@ pip install -r requirements.txt
 | 来源 | 用途 |
 |---|---|
 | [Danbooru](https://danbooru.donmai.us) | 画师 / 作品 IP / 角色 IP / 风格·meta 标签库 + 预览图首图 |
+| [Gelbooru](https://gelbooru.com) | 画师 / 作品 IP / 角色 IP / 通用标签库 + 预览图首图 |
 | [mooshieblob Anima Artist Gallery](https://anima.mooshieblob.com) | 1000+ 精选画师 + 高质量风格预览图 |
 | [Civitai](https://civitai.com) | 按模型 ID 抓取高赞图 prompt（公开 API，免 token） |
 
@@ -139,6 +147,10 @@ pip install -r requirements.txt
 | `GET /anima_t8/dtags/preview?name=xxx` | 拉取某 tag 的代表作首图 URL（带本地 LRU 4096 缓存） |
 | `GET /anima_t8/dtags/image?u=xxx` | **同源图片代理**（白名单 cdn.donmai.us / danbooru.donmai.us） |
 | `POST /anima_t8/dtags/refresh` | 强制刷新某 category 的标签库 |
+| `GET /anima_t8/gtags?category=artist\|copyright\|character\|general` | Gelbooru 四类标签 |
+| `GET /anima_t8/gtags/preview?name=xxx` | 拉取 Gelbooru tag 的代表作首图 URL |
+| `GET /anima_t8/gtags/image?u=xxx` | Gelbooru 同源图片代理 |
+| `POST /anima_t8/gtags/refresh` | 强制刷新某 Gelbooru category 的标签库 |
 | `POST /anima_t8/artists/pin` | Pin / 取消 Pin 一个画师 |
 | `POST /anima_t8/civitai/refresh` | **v1.2** 按 model_id 抓取 Civitai 高赞图 prompt 并写入风格库 |
 
@@ -153,16 +165,19 @@ comfyui-anima-t8/
 ├── requirements.txt         # Python 依赖
 ├── api/
 │   ├── danbooru_client.py   # Danbooru 标签拉取（4 路并发, 4 类: artist/copyright/character/meta）
+│   ├── gelbooru_client.py   # Gelbooru 标签 / 预览图拉取（含 autocomplete / HTML fallback）
 │   └── civitai_client.py    # v1.2 Civitai images API 客户端 + ComfyUI workflow 解析 + 自动归类
 ├── core/
 │   ├── db.py                # SQLite 自愈连接
 │   ├── artist_manager.py    # mooshieblob 画师管理
 │   ├── danbooru_manager.py  # Danbooru 标签管理 + 预览图代理
+│   ├── gelbooru_manager.py  # Gelbooru 标签管理 + 预览图代理
 │   ├── tag_manager.py       # 风格库分类标签（增量种子）
 │   └── prompt_manager.py    # 风格库 prompt 预设（增量种子，按 title 去重）
 ├── nodes/
 │   ├── anima_prompt_node.py
 │   ├── anima_artist_node.py # Anima Artist Style T8（含 PREVIEW_IMAGES 输出）
+│   ├── gelbooru_style_node.py # Anima Gelbooru Style T8（含 PREVIEW_IMAGES 输出）
 │   ├── anima_combiner_node.py
 │   └── anima_loader_node.py
 ├── server/
@@ -173,6 +188,7 @@ comfyui-anima-t8/
     ├── components/
     │   ├── prompt_panel.js  # 风格库面板
     │   ├── artist_gallery.js # 4 Tab 画师 / IP 画廊
+    │   ├── gelbooru_gallery.js # Gelbooru 标签库面板
     │   └── tag_chip.js
     └── styles/
         └── anima_t8.css
@@ -209,6 +225,12 @@ comfyui-anima-t8/
 ---
 
 ## 📝 版本历史
+
+### v1.5.0 (2026-08)
+- ✨ **新增 Gelbooru 独立节点与标签库**：`Anima Gelbooru Style T8` + Gelbooru 画师 / 作品 IP / 角色 IP / 通用标签面板
+- 🔌 **新增 Gelbooru 路由**：`/anima_t8/gtags*` 独立于现有 Danbooru `/dtags*`
+- 🛡 **Gelbooru 401 fallback**：正式 DAPI 无 key 返回 401 时，标签搜索走公开 autocomplete2，预览图走公开 HTML 缩略图兜底
+- 📦 **Comfy Registry 发布准备**：补齐 PublisherId、GitHub Action 和 `.comfyignore`
 
 ### v1.4.3 (2026-05)
 - 🎨 **STYLE_PROMPT 合并 `last_picked` 额外 token**：`last_picked` 里不在 `artist_tags` 中的裸 token（作品 IP / 角色 IP / 风格·meta 等）以裸名追加输出，以 `, ` 连接。例：`artist_tags=@dairi, @ebifurya` + `last_picked=dairi, ebifurya, original` → `@dairi, @ebifurya, original`（画师去重，额外 meta 追加）

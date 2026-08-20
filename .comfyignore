@@ -1,0 +1,32 @@
+# Files useful for development or collaboration, but not needed in the
+# Comfy Registry package.
+.github/
+.agents/
+.codex/
+.vscode/
+.idea/
+
+skill.md
+roadmap.md
+
+/_check_anya.py
+/_dbg.py
+/_repull.py
+/_smoke_*.py
+/_t.py
+/_test_*.py
+/_gitstate.txt
+/_smoke_out.txt
+/_out.log
+*.log
+
+data/*.sqlite
+data/*.sqlite-journal
+data/*.sqlite-wal
+data/*.sqlite-shm
+data/*.db
+data/*.db-journal
+data/*.db-wal
+data/*.db-shm
+data/*.corrupt.*
+data/gelbooru_auth.json

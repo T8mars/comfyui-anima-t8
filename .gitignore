@@ -20,6 +20,7 @@ _smoke_*.py
 _smoke_*.log
 _smoke_out.txt
 _out.log
+node.zip
 *.log
 
 # IDE

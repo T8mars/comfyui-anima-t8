@@ -153,7 +153,8 @@ def register_routes():
                 ),
             )
         except Exception as e:
-            import traceback; traceback.print_exc()
+            import traceback
+            traceback.print_exc()
             return _err("Civitai 拉取失败：" + str(e), 502)
 
         # 限 top_n + 依赖 prompt_manager 里同名 title 增量逻辑手工实现

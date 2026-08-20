@@ -1,14 +1,18 @@
 [project]
 name = "comfyui-anima-t8"
-description = "Anima 动漫提示词生成器：风格库（52 预设 / 15 分类，三段式 + 标签/搜索/收藏/置顶） + 1000+ 画师库 + Danbooru 四类标签（画师/作品IP/角色IP/风格·meta） + Civitai 一键抓取 + 实时风格预览图。完美适配 ComfyUI。"
-version = "1.4.3"
+description = "Anima prompt workstation for ComfyUI with prompt presets, artist libraries, Danbooru and Gelbooru tag galleries, Civitai prompt import, and preview images."
+version = "1.5.0"
 license = { text = "MIT" }
+requires-python = ">=3.10"
 dependencies = ["requests"]
+classifiers = [
+    "Operating System :: OS Independent",
+]
 
 [project.urls]
 Repository = "https://github.com/T8mars/comfyui-anima-t8"
+"Bug Tracker" = "https://github.com/T8mars/comfyui-anima-t8/issues"
 
 [tool.comfy]
-PublisherId = "T8mars"
+PublisherId = "t8star"
 DisplayName = "Anima Prompt T8"
-Icon = ""
