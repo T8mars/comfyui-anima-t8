@@ -15,7 +15,7 @@ My favorite girl Go YounJung
 >
 > 风格库三段式（52 条预设 / 15 分类）+ 1000+ 画师库 + Danbooru/Gelbooru 标签库 + Civitai 一键抓取 + 实时风格预览图
 
-[![version](https://img.shields.io/badge/version-1.5.0-blue.svg)]()
+[![version](https://img.shields.io/badge/version-1.5.1-blue.svg)]()
 [![ComfyUI](https://img.shields.io/badge/ComfyUI-custom_node-green.svg)](https://github.com/comfyanonymous/ComfyUI)
 [![license](https://img.shields.io/badge/license-MIT-lightgrey.svg)]()
 
@@ -225,6 +225,9 @@ comfyui-anima-t8/
 ---
 
 ## 📝 版本历史
+
+### v1.5.1 (2026-08)
+- 🛡️ **外部请求重试增强**：Danbooru / Gelbooru / Civitai / 预览图代理等只读网络请求增加 direct / proxy 多路线重试，缓解临时 429、502、503、504、TLS EOF 和不完整响应导致的失败。
 
 ### v1.5.0 (2026-08)
 - ✨ **新增 Gelbooru 独立节点与标签库**：`Anima Gelbooru Style T8` + Gelbooru 画师 / 作品 IP / 角色 IP / 通用标签面板

@@ -1,7 +1,7 @@
 [project]
 name = "comfyui-anima-t8"
 description = "Anima prompt workstation for ComfyUI with prompt presets, artist libraries, Danbooru and Gelbooru tag galleries, Civitai prompt import, and preview images."
-version = "1.5.0"
+version = "1.5.1"
 license = { text = "MIT" }
 requires-python = ">=3.10"
 dependencies = ["requests"]
