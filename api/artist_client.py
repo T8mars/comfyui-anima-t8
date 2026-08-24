@@ -8,6 +8,11 @@ import urllib.request
 import urllib.error
 from typing import List, Dict, Any
 
+try:
+    from ..http_retry import read_response_limited, urlopen_with_route_retry
+except Exception:
+    from http_retry import read_response_limited, urlopen_with_route_retry
+
 
 class ArtistClient:
     BASE_URL = "https://cdn.mooshieblob.com/20260325_anima_all_artists"
@@ -20,19 +25,22 @@ class ArtistClient:
                 self.SEARCH_URL,
                 headers={"User-Agent": "comfyui-anima-t8/1.0"},
             )
-            with urllib.request.urlopen(req, timeout=self.TIMEOUT) as resp:
+            def consume(resp):
                 if resp.status != 200:
                     print("[anima_t8] 远程返回非 200:", resp.status)
                     return []
-                raw = resp.read().decode("utf-8")
+                raw = read_response_limited(resp, 5 * 1024 * 1024).decode("utf-8")
                 data = json.loads(raw)
                 if isinstance(data, list):
                     return data
                 if isinstance(data, dict) and "artists" in data:
                     return data.get("artists") or []
                 return []
+            return urlopen_with_route_retry(
+                req, timeout=self.TIMEOUT, consume=consume
+            )
         except Exception as e:
-            print("[anima_t8] 获取艺术家列表失败:", e)
+            print("[anima_t8] 获取艺术家列表失败:", type(e).__name__)
             return []
 
     def image_url(self, image_id: str) -> str:

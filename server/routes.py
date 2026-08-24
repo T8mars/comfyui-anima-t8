@@ -13,6 +13,7 @@ try:
     from core.gelbooru_manager import get_gelbooru_manager
     from core.db import DEFAULT_NEGATIVE_PROMPT
     from api import civitai_client
+    from http_retry import read_response_limited, urlopen_with_route_retry
 except Exception:
     from ..core import prompt_manager, tag_manager
     from ..core.artist_manager import get_artist_manager
@@ -20,6 +21,7 @@ except Exception:
     from ..core.gelbooru_manager import get_gelbooru_manager
     from ..core.db import DEFAULT_NEGATIVE_PROMPT
     from ..api import civitai_client
+    from ..http_retry import read_response_limited, urlopen_with_route_retry
 
 
 def _ok(data=None):
@@ -382,8 +384,15 @@ def register_routes():
                 "User-Agent": "AnimaForge/1.0",
                 "Referer": "https://danbooru.donmai.us/",
             })
-            with _ur.urlopen(req, timeout=15, context=ctx) as r:
-                return r.read(), r.headers.get("Content-Type", "image/jpeg")
+            return urlopen_with_route_retry(
+                req,
+                timeout=15,
+                context=ctx,
+                consume=lambda r: (
+                    read_response_limited(r),
+                    r.headers.get("Content-Type", "image/jpeg"),
+                ),
+            )
         try:
             loop = request.app.loop
             body, ctype = await loop.run_in_executor(None, _fetch)
@@ -391,8 +400,8 @@ def register_routes():
                 "Cache-Control": "public, max-age=86400",
             })
         except Exception as e:
-            print(f"[anima_t8] image proxy failed url={u}: {e}")
-            return _err("proxy failed: " + str(e), 502)
+            print(f"[anima_t8] image proxy failed: {type(e).__name__}")
+            return _err("proxy failed", 502)
 
     @routes.get("/anima_t8/dtags/preview")
     async def preview_dtag(request: web.Request):
@@ -509,8 +518,15 @@ def register_routes():
                 "User-Agent": "AnimaForge/1.0",
                 "Referer": "https://gelbooru.com/",
             })
-            with _ur.urlopen(req, timeout=15, context=ctx) as r:
-                return r.read(), r.headers.get("Content-Type", "image/jpeg")
+            return urlopen_with_route_retry(
+                req,
+                timeout=15,
+                context=ctx,
+                consume=lambda r: (
+                    read_response_limited(r),
+                    r.headers.get("Content-Type", "image/jpeg"),
+                ),
+            )
 
         try:
             loop = request.app.loop
@@ -519,8 +535,8 @@ def register_routes():
                 "Cache-Control": "public, max-age=86400",
             })
         except Exception as e:
-            print(f"[anima_t8] gelbooru image proxy failed url={u}: {e}")
-            return _err("proxy failed: " + str(e), 502)
+            print(f"[anima_t8] gelbooru image proxy failed: {type(e).__name__}")
+            return _err("proxy failed", 502)
 
     @routes.get("/anima_t8/gtags/preview")
     async def preview_gtag(request: web.Request):

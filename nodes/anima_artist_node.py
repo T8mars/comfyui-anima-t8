@@ -12,6 +12,11 @@ import urllib.request
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import List, Optional
 
+try:
+    from ..http_retry import read_response_limited, urlopen_with_route_retry
+except Exception:
+    from http_retry import read_response_limited, urlopen_with_route_retry
+
 DANBOORU_BASE = "https://danbooru.donmai.us"
 _USER_AGENT = "comfyui-anima-t8/1.0"
 _PREVIEW_W, _PREVIEW_H = 512, 768  # 输出画布尺寸（实际图片等比缩放后居中填充到该画布，保持原比例）
@@ -28,8 +33,15 @@ def _fetch_preview_pil(name: str, timeout: float = 8.0):
     api = f"{DANBOORU_BASE}/posts.json?tags={tag_q}&limit=1"
     try:
         req = urllib.request.Request(api, headers={"User-Agent": _USER_AGENT})
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
-            data = json.loads(resp.read().decode("utf-8", errors="ignore"))
+        data = json.loads(
+            urlopen_with_route_retry(
+                req,
+                timeout=timeout,
+                consume=lambda resp: read_response_limited(
+                    resp, 5 * 1024 * 1024
+                ).decode("utf-8", errors="ignore"),
+            )
+        )
         if not isinstance(data, list) or not data:
             return None
         p = data[0]
@@ -41,11 +53,12 @@ def _fetch_preview_pil(name: str, timeout: float = 8.0):
             "User-Agent": _USER_AGENT,
             "Referer": "https://danbooru.donmai.us/",
         })
-        with urllib.request.urlopen(req2, timeout=timeout * 2) as resp:
-            buf = resp.read()
+        buf = urlopen_with_route_retry(
+            req2, timeout=timeout * 2, consume=read_response_limited
+        )
         return Image.open(io.BytesIO(buf)).convert("RGB")
     except Exception as e:
-        print(f"[anima_t8] preview fetch fail name={name}: {e}")
+        print(f"[anima_t8] preview fetch failed: {type(e).__name__}")
         return None
 
 
